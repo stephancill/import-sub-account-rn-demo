@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "@privy-io/expo-starter",
+    "slug": "expo-starter",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.stephan.privy",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "dev.stephan.privy"
+    },
+    "extra": {
+      "privyAppId": "cmdyxmy4w0053k10bj1yn77nh",
+      "privyClientId": "client-WY6NzVdRhw2tPJM95iit1zbQuoQaLsjUXPEjU7jBrT6u7"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "17.5"
+          },
+          "android": {
+            "compileSdkVersion": 35
+          }
+        }
+      ],
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
