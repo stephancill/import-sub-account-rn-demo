@@ -2,6 +2,45 @@
 
 This demo shows how to use ASWebAuthenticationSession to pass data between a React Native app and a web interface, specifically for importing account data using the Base Account SDK.
 
+## Setup and Running
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- pnpm package manager
+- iOS Simulator or device (for native app)
+
+### Installation
+
+1. Clone the repository and navigate to the project directory
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+
+### Running the Application
+
+This demo requires running both the web app and native app simultaneously:
+
+#### Terminal 1 - Web App
+```bash
+pnpm --filter web dev
+```
+This starts the web development server on `http://localhost:5173`
+
+#### Terminal 2 - Native App
+```bash
+pnpm --filter native start
+```
+This starts the React Native development server and opens the iOS simulator
+
+### Usage
+
+1. Make sure both servers are running
+2. In the native app, tap "Open Web Session" 
+3. The web app will open in an authentication session
+4. The web app will connect to the Base Account SDK and return data to the native app
+
 ## Authentication Flow
 
 ### 1. Initiating Auth from Native App
