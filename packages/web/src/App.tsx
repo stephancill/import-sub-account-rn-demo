@@ -7,14 +7,20 @@ import {
 
 function App() {
   const [address, setAddress] = useState<string | null>(null);
+  const [factory, setFactory] = useState<string | null>(null);
+  const [factoryData, setFactoryData] = useState<string | null>(null);
+  const [accountType, setAccountType] = useState<string | null>(null);
   const [provider, setProvider] = useState<ProviderInterface | null>(null);
   const [response, setResponse] = useState<any | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
-    // Parse address from URL parameters
+    // Parse parameters from URL
     const urlParams = new URLSearchParams(window.location.search);
     const addressParam = urlParams.get("address");
+    const factoryParam = urlParams.get("factory");
+    const factoryDataParam = urlParams.get("factoryData");
+    const typeParam = urlParams.get("type");
 
     const provider = createBaseAccountSDK({}).getProvider();
 
@@ -24,6 +30,15 @@ function App() {
 
     if (addressParam) {
       setAddress(addressParam);
+    }
+    if (factoryParam) {
+      setFactory(factoryParam);
+    }
+    if (factoryDataParam) {
+      setFactoryData(factoryDataParam);
+    }
+    if (typeParam) {
+      setAccountType(typeParam);
     }
   }, []);
 
@@ -35,20 +50,29 @@ function App() {
     setIsConnecting(true);
 
     try {
+      // Build account object based on type
+      const account: any = {
+        address: address,
+        chainId: 84532,
+      };
+
+      if (accountType === "undeployed" && factory && factoryData) {
+        account.type = "undeployed";
+        account.factory = factory;
+        account.factoryData = factoryData;
+      } else {
+        account.type = "deployed";
+      }
+
+      console.log(JSON.stringify(account, null, 2));
+
       const response = await provider.request({
         method: "wallet_connect",
         params: [
           {
             capabilities: {
-              // addSubAccount: {
-              //   account: {
-              //     type: "deployed",
-              //     address: address,
-              //     chainId: 8453,
-              //   },
-              // },
-              signInWithEthereum: {
-                nonce: "123",
+              addSubAccount: {
+                account,
               },
             },
           },

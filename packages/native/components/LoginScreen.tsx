@@ -1,26 +1,12 @@
 import { Button, Linking, Text, View } from "react-native";
-import { LoginWithOAuthInput, useLoginWithOAuth } from "@privy-io/expo";
 import { useLogin } from "@privy-io/expo/ui";
-import { useLoginWithPasskey } from "@privy-io/expo/passkey";
 import Constants from "expo-constants";
 import { useState } from "react";
 import * as Application from "expo-application";
 
 export default function LoginScreen() {
   const [error, setError] = useState("");
-  const { loginWithPasskey } = useLoginWithPasskey({
-    onError: (err) => {
-      console.log(err);
-      setError(JSON.stringify(err.message));
-    },
-  });
   const { login } = useLogin();
-  const oauth = useLoginWithOAuth({
-    onError: (err) => {
-      console.log(err);
-      setError(JSON.stringify(err.message));
-    },
-  });
   return (
     <View
       style={{
@@ -85,29 +71,6 @@ export default function LoginScreen() {
             });
         }}
       />
-
-      <Button
-        title="Login using Passkey"
-        onPress={() =>
-          loginWithPasskey({
-            relyingParty: Constants.expoConfig?.extra?.passkeyAssociatedDomain,
-          })
-        }
-      />
-
-      <View
-        style={{ display: "flex", flexDirection: "column", gap: 5, margin: 10 }}
-      >
-        {["github", "google", "discord", "apple"].map((provider) => (
-          <View key={provider}>
-            <Button
-              title={`Login with ${provider}`}
-              disabled={oauth.state.status === "loading"}
-              onPress={() => oauth.login({ provider } as LoginWithOAuthInput)}
-            ></Button>
-          </View>
-        ))}
-      </View>
       {error && <Text style={{ color: "red" }}>Error: {error}</Text>}
     </View>
   );
