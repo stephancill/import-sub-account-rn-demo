@@ -1,18 +1,25 @@
-import React, { useState, useCallback } from "react";
-import { Text, TextInput, View, Button, ScrollView } from "react-native";
-import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import React, { useCallback, useMemo, useState } from "react";
+import { Button, ScrollView, Text, TextInput, View } from "react-native";
+import { toCoinbaseSmartAccount } from "viem/account-abstraction";
 
 import {
-  usePrivy,
-  useEmbeddedEthereumWallet,
+  base,
+  baseSepolia,
   getUserEmbeddedEthereumWallet,
   PrivyEmbeddedWalletProvider,
-  useLinkWithOAuth,
+  useEmbeddedEthereumWallet,
+  usePrivy,
 } from "@privy-io/expo";
-import Constants from "expo-constants";
-import { useLinkWithPasskey } from "@privy-io/expo/passkey";
 import { PrivyUser } from "@privy-io/public-api";
+import {
+  createPublicClient,
+  createWalletClient,
+  custom,
+  Hex,
+  http,
+} from "viem";
 
 const toMainIdentifier = (x: PrivyUser["linked_accounts"][number]) => {
   if (x.type === "phone") {
@@ -59,10 +66,10 @@ export const UserScreen = ({ onAccountDataReceived }: UserScreenProps = {}) => {
   const [signedMessages, setSignedMessages] = useState<string[]>([]);
 
   const { logout, user } = usePrivy();
-  const { linkWithPasskey } = useLinkWithPasskey();
-  const oauth = useLinkWithOAuth();
   const { wallets, create } = useEmbeddedEthereumWallet();
   const account = getUserEmbeddedEthereumWallet(user);
+
+  const smartAccount = useMemo(() => {}, [wallets]);
 
   const openWebSession = useCallback(async () => {
     if (!account?.address) {
@@ -70,12 +77,65 @@ export const UserScreen = ({ onAccountDataReceived }: UserScreenProps = {}) => {
       return;
     }
 
-    const webUrl = `http://localhost:5173?address=${encodeURIComponent(
-      account.address
-    )}`;
+    const wallet = wallets[0];
+
+    if (!wallet) {
+      throw new Error("No wallet found");
+    }
+
+    const provider = await wallet.getProvider();
+
+    const publicClient = createPublicClient({
+      chain: base,
+      transport: http(),
+    });
+
+    const walletClient = createWalletClient({
+      account: wallet.address as Hex,
+      chain: baseSepolia,
+      transport: custom(provider),
+    });
+
+    const smartAccount = await toCoinbaseSmartAccount({
+      client: publicClient,
+      owners: [
+        {
+          ...walletClient.account,
+          publicKey: walletClient.account.address,
+          signMessage: walletClient.signMessage,
+          signTypedData: walletClient.signTypedData as any,
+          signTransaction: walletClient.signTransaction as any,
+          type: "local",
+          source: "privy",
+        },
+      ],
+      version: "1.1",
+    });
+
+    const factoryArgs = await smartAccount.getFactoryArgs();
+
+    if (!factoryArgs.factory || !factoryArgs.factoryData) {
+      throw new Error("Failed to get factory args");
+    }
+
+    const url = new URL("http://localhost:5173");
+    // url.searchParams.set("address", smartAccount.address);
+    // url.searchParams.set("factory", factoryArgs.factory);
+    // url.searchParams.set("factoryData", factoryArgs.factoryData);
+    // url.searchParams.set("type", "undeployed");
+
+    url.searchParams.set("type", "deployed");
+    url.searchParams.set(
+      "address",
+      "0x940dCb9BF657883C6688cc308e14A5f78aD31ec9"
+    );
+    url.searchParams.set("chainId", "84532");
 
     try {
-      const result = await WebBrowser.openAuthSessionAsync(webUrl, "myapp://");
+      const result = await WebBrowser.openAuthSessionAsync(
+        url.toString(),
+        "myapp://"
+      );
       console.log("Auth session result:", result);
 
       // Handle the result directly if it contains our data
